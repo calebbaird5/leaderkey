@@ -8,6 +8,7 @@ import {
   workspace,
 } from "vscode";
 import { TokenType } from "../leaderkey/command";
+import { addAlphaToColor } from "./utils";
 
 type ThemeType = "dark" | "light";
 let globalThemeType: ThemeType = "dark";
@@ -41,20 +42,41 @@ updateStickyScrollConf();
 
 type BackgroundType = "default" | "header" | "border" | "cursor" | "gray";
 
+const config = workspace.getConfiguration("leaderkey")
+const configColors = {
+  dark: {
+    background: config.get("darkModeBackgroundColor", "#292b2e"),
+    header: config.get("darkModeHeaderColor", "#5d4d7a"),
+    border: config.get("darkModeBorderColor", "#68217A",),
+    key: config.get("darkModeKeyColor", "#bc6ec5"),
+    arrow: config.get("darkModeArrowColor", "#2d9574"),
+    command: config.get("darkModeCommandColor", "#ccc"),
+  },
+  light: {
+    background: config.get("lightModeBackgroundColor", "#FAF7EC"),
+    heeader: config.get("lightModeHeaderColor", "#E6E6EA"),
+    border: config.get("darkModeBorderColor", "#E7E5EB"),
+    key: config.get("lightModeKeyColor", "#692F60"),
+    arrow: config.get("lightModeArrowColor", "#2A976D"),
+    command: config.get("lightModeCommandColor", "#67537A"),
+  }
+};
+
 const decoRenderOpts: {
   [themeType in ThemeType]: { [decoType in BackgroundType]: string };
 } = {
   dark: {
-    default: "#292b2e",
-    header: "#5d4d7a",
-    border: "#68217A",
+    default: configColors.dark.background,
+    header: configColors.dark.header,
+    border: configColors.dark.border,
     cursor: "#BBB",
     gray: "#88888833",
+
   },
   light: {
-    default: "#FAF7EC",
-    header: "#E6E6EA",
-    border: "#E7E5EB",
+    default: configColors.light.background,
+    header: configColors.light.heeader,
+    border: configColors.light.border,
     cursor: "#444",
     gray: "#88888833",
   },
@@ -75,50 +97,50 @@ const themeRenderOpts: {
   };
 } = {
   dark: {
-    dir: { color: "#bc6ec5" },
-    key: { color: "#bc6ec5", fontWeight: "bold" },
-    arrow: { color: "#2d9574" },
-    "arrow-bold": { color: "#2d9574", fontWeight: "bold" },
+    dir: { color: configColors.dark.key },
+    key: { color: configColors.dark.key, fontWeight: "bold" },
+    arrow: { color: configColors.dark.arrow },
+    "arrow-bold": { color: configColors.dark.arrow, fontWeight: "bold" },
     binding: { color: "#4190d8" },
     highlight: { color: "#4190d8", fontWeight: "bold" },
-    command: { color: "#ccc" },
-    dim: { color: "#ccc8" },
-    dimdim: { color: "#ccc3" },
+    command: { color: config.get("darkModeCommandColor", "#ccc") },
+    dim: { color: addAlphaToColor(configColors.dark.command, "8") },
+    dimdim: { color: addAlphaToColor(configColors.dark.command, "3") },
     "error-bold": { color: new ThemeColor("errorForeground"), fontWeight: "bold" },
   },
   light: {
-    key: { color: "#692F60", fontWeight: "bold" },
-    dir: { color: "#692F60" },
-    arrow: { color: "#2A976D" },
-    "arrow-bold": { color: "#2A976D", fontWeight: "bold" },
+    key: { color: configColors.light.key, fontWeight: "bold" },
+    dir: { color: configColors.light.key },
+    arrow: { color: configColors.light.arrow },
+    "arrow-bold": { color: configColors.light.arrow, fontWeight: "bold" },
     binding: { color: "#3781C2" },
     highlight: { color: "#3781C2", fontWeight: "bold" },
-    command: { color: "#67537A" },
-    dim: { color: "#67537A80" },
-    dimdim: { color: "#67537A30" },
+    command: { color: configColors.light.command },
+    dim: { color: addAlphaToColor(configColors.light.command, "8") },
+    dimdim: { color: addAlphaToColor(configColors.light.command, "3") },
     "error-bold": { color: new ThemeColor("errorForeground"), fontWeight: "bold" },
   },
 };
 
 export type Decoration =
   | {
-      type: "background";
-      background?: BackgroundType;
-      lines: number;
-      width?: number;
-      lineOffset?: number;
-      charOffset?: number;
-      zOffset?: number;
-    }
+    type: "background";
+    background?: BackgroundType;
+    lines: number;
+    width?: number;
+    lineOffset?: number;
+    charOffset?: number;
+    zOffset?: number;
+  }
   | {
-      type: "text";
-      background?: BackgroundType;
-      foreground: TextType;
-      lineOffset?: number;
-      charOffset?: number;
-      text: string;
-      zOffset?: number;
-    };
+    type: "text";
+    background?: BackgroundType;
+    foreground: TextType;
+    lineOffset?: number;
+    charOffset?: number;
+    text: string;
+    zOffset?: number;
+  };
 
 function escapeTextForBeforeContentText(text: string) {
   return text

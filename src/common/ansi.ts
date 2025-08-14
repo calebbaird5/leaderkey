@@ -13,9 +13,10 @@ import {
   createAnsiSequenceParser,
   createColorPalette,
   namedColors,
-} from "../ansi-sequence-parser/src";
+} from "ansi-sequence-parser";
 import { assert, log } from "./global";
 import { runProcess } from "./remote";
+
 
 /** This module manages the terminal ANSI color rendering in VSCode via DecorationType. */
 
