@@ -36,7 +36,8 @@
   ],
   "extensionPack": [
     "jimmyzjx.remote-commons",
-    "kahole.magit"
+    "kahole.magit",
+    "at-ishikawa.vscode-dired-mode"
   ],
   "activationEvents": [
     "*"

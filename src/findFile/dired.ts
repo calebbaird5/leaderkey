@@ -91,6 +91,16 @@ async function loadContent(uri: Uri): Promise<DecoratedPage<DiredMetadata>> {
 }
 
 export async function showDir(path: string) {
+  try {
+    // Try to use vscode-dired-mode if available
+    console.log("Opening dired mode for directory:", path);
+    await commands.executeCommand("extension.dired.open", path);
+    return;
+  } catch (e) {
+    console.warn("Failed to open dired mode, falling back to internal implementation:", e);
+    // Fallback to internal implementation
+  }
+
   if (!path.endsWith("/")) path += "/";
   const uri = Uri.from({ scheme, path });
   const pagePromise = loadContent(uri);
