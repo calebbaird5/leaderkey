@@ -241,6 +241,11 @@
           "type": "string",
           "default": "#E7E5EB",
           "description": "The border color of the leaderkey menu in light mode."
+        },
+        "leaderkey.debounceDelay": {
+          "type": "number",
+          "default": 0,
+          "description": "The debounce delay in milliseconds for rendering the leaderkey menu. Set to 0 to disable debounce."
         }
       }
     },

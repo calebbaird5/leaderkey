@@ -24,12 +24,20 @@ import { renderBinding } from "./render";
 
 /** must be a global single instance */
 export class LeaderkeyPanel {
+  private pop(path: string): string {
+    const lastSpaceIndex = path.lastIndexOf(" ");
+    return lastSpaceIndex === -1 ? "" : path.slice(0, lastSpaceIndex);
+  }
+  private debounceExpired: boolean = false;
+  private menuVisible: boolean = false;
   root: Bindings;
   path: string;
   when: string | undefined;
   disposableDecos: TextEditorDecorationType[] = [];
 
   disableRenderUntilQuestionMark: boolean = false;
+  private debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  private debounceDelay: number = 1000; // ms, adjust as needed
 
   onReset: () => void;
 
@@ -108,6 +116,12 @@ export class LeaderkeyPanel {
           if (path === "") {
             // reset
             this.when = undefined;
+            this.menuVisible = false;
+            this.debounceExpired = false;
+            if (this.debounceTimeout) {
+              clearTimeout(this.debounceTimeout);
+              this.debounceTimeout = null;
+            }
           } else {
             const activeTab = window.tabGroups.activeTabGroup.tabs.find(
               (t) => t.isActive,
@@ -120,7 +134,20 @@ export class LeaderkeyPanel {
               // skip rendering
             } else {
               if (!this.disableRenderUntilQuestionMark) {
-                this.disposableDecos = renderBinding(editor, bOrC, path, this.when);
+                if (this.menuVisible || this.debounceExpired) {
+                  this.debounceExpired = true;
+                  this.menuVisible = true;
+                  this.disposableDecos = renderBinding(editor, bOrC, path, this.when);
+                } else {
+                  if (this.debounceTimeout) {
+                    clearTimeout(this.debounceTimeout);
+                  }
+                  this.debounceTimeout = setTimeout(() => {
+                    this.debounceExpired = true;
+                    this.disposableDecos = renderBinding(editor, bOrC, path, this.when);
+                    this.menuVisible = true;
+                  }, this.debounceDelay);
+                }
               }
             }
           }
@@ -129,11 +156,6 @@ export class LeaderkeyPanel {
         for (const dsp of oldDisposables) dsp.dispose();
       }
     }
-  }
-
-  private pop(path: string): string {
-    const lastSpaceIndex = path.lastIndexOf(" ");
-    return lastSpaceIndex === -1 ? "" : path.slice(0, lastSpaceIndex);
   }
 
   public async onKey(keyOrObj: string | { key: string; when: string }) {
@@ -146,6 +168,7 @@ export class LeaderkeyPanel {
     let newPath: string;
     if (this.disableRenderUntilQuestionMark && key === "?") {
       this.disableRenderUntilQuestionMark = false;
+      this.debounceDelay = 0; // Disable debounce for immediate rendering
       newPath = this.path;
     } else {
       if (key === "<backspace>") {
@@ -185,6 +208,9 @@ export class LeaderkeyPanel {
     this.disableRenderUntilQuestionMark = workspace
       .getConfiguration("leaderkey")
       .get("hideLeaderkeyMenu", false);
+    this.debounceDelay = workspace
+      .getConfiguration("leaderkey")
+      .get("debounceDelay", 0) || 0;
     if (typeof pathOrWithWhen === "string") {
       return this.setAndRenderPath(pathOrWithWhen, undefined);
     } else {
